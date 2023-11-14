@@ -27,6 +27,7 @@ async function run() {
     const database = client.db("bistroBoss");
     const menuCollection = database.collection("menu");
     const reviwesCollection = database.collection("reviwes");
+    const cartCollection = database.collection("cart");
 
 
     // get the menu data
@@ -40,6 +41,33 @@ app.get('/reviwes', async(req,res) =>{
     const cursor = reviwesCollection.find();
     const result = await cursor.toArray();
     res.send(result)
+})
+
+
+// add to cart
+app.post('/cart', async(req,res) =>{
+  const cartItem = req.body;
+  const existingCartItem = await cartCollection.findOne({
+    menuId: cartItem.menuId,
+    email: cartItem.email,
+  });
+
+  if (existingCartItem) {
+    // Item already exists, you can choose to update the existing item or ignore the request
+    res.status(400).send({ error: 'Item already in the cart' });
+  } else {
+    const result = await cartCollection.insertOne(cartItem);
+    res.send(result);
+  }
+
+})
+// get the cart data
+app.get('/cart', async(req,res) =>{
+  const email = req.query.email;
+ const query ={email: email}
+  const cursor = cartCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result)
 })
 
 
