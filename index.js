@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const app = express()
 const port =process.env.PORT || 5000;
@@ -43,8 +44,33 @@ app.post('/users', async(req,res) =>{
    res.send(result)
 })
 
+// role make
+app.patch('/user/admin/:id', async(req,res) =>{
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id)}
+  const updatedDoc = {
+    $set: {
+      role: 'admin'
+    }
+  }
+  const result = await usersCollection.updateOne(filter,updatedDoc)
+  res.send(result)
+})
+
+// middelwares 
+const verifyToken = (req,res,next) =>{
+  console.log('inside verifyr',req.headers);
+  if(!req?.headers?.authorization){
+    return res.status(401).send({message: 'forbidden access'})
+  }
+  const token = req.headers.authorization.split(' ')[1]
+
+  // next();
+}
+
 // get user
-app.get('/users', async(req,res) =>{
+app.get('/users', verifyToken, async(req,res) =>{
+  console.log(req.headers)
   const result = await usersCollection.find().toArray();
   res.send(result)
 })
@@ -103,6 +129,13 @@ app.delete('/cart/:id', async(req,res) =>{
     const query ={_id: new ObjectId(id)}
     const result = await cartCollection.deleteOne(query);
     res.send(result)
+})
+
+// jwt 
+app.post('/jwt', async(req,res) =>{
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN, {expiresIn: '10h'})
+  res.send({token})
 })
 
 
