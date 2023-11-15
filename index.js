@@ -26,9 +26,36 @@ async function run() {
     await client.connect();
     const database = client.db("bistroBoss");
     const menuCollection = database.collection("menu");
+    const usersCollection = database.collection("users");
     const reviwesCollection = database.collection("reviwes");
     const cartCollection = database.collection("cart");
 
+
+    // user post
+app.post('/users', async(req,res) =>{
+   const user = req.body;
+   const query = {email: user.email}
+   const existingUser = await usersCollection.findOne(query)
+   if(existingUser){
+    return res.send({message: 'user already exists', insertedId: null})
+   }
+   const result = await usersCollection.insertOne(user)
+   res.send(result)
+})
+
+// get user
+app.get('/users', async(req,res) =>{
+  const result = await usersCollection.find().toArray();
+  res.send(result)
+})
+
+// delete user
+app.delete('/users/:id', async(req,res) =>{
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id)}
+  const result = await usersCollection.deleteOne(query)
+  res.send(result)
+})
 
     // get the menu data
 app.get('/menu', async(req,res) =>{
@@ -54,7 +81,7 @@ app.post('/cart', async(req,res) =>{
 
   if (existingCartItem) {
     // Item already exists, you can choose to update the existing item or ignore the request
-    res.status(400).send({ error: 'Item already in the cart' });
+   return res.send({ error: 'Item already in the cart' });
   } else {
     const result = await cartCollection.insertOne(cartItem);
     res.send(result);
