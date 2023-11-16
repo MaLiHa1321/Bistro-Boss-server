@@ -94,6 +94,13 @@ app.delete('/users/:id', async(req,res) =>{
   res.send(result)
 })
 
+// menu post
+app.post('/menu',verifyToken, verifyAdmin, async(req,res) =>{
+  const item = req.body;
+  const result = await menuCollection.insertOne(item)
+  res.send(result)
+})
+
     // get the menu data
 app.get('/menu', async(req,res) =>{
     const cursor = menuCollection.find();
