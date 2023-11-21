@@ -260,6 +260,29 @@ app.post('/jwt', async(req,res) =>{
 })
 
 
+// stats and anlytics
+app.get('/admin-stats', async(req,res)=>{
+  const users = await usersCollection.estimatedDocumentCount();
+  const menuItems = await menuCollection.estimatedDocumentCount();
+  const orders = await paymentCollection.estimatedDocumentCount()
+
+  // revenue
+  // const payments = await paymentCollection.find().toArray();
+  // const revenue = payments.reduce((total,item) => total+ item.price, 0)
+
+  const result = await paymentCollection.aggregate([
+    {
+      
+    }
+  ])
+  res.send({
+    users,
+    menuItems,
+    orders,
+    revenue
+  })
+})
+
 
 
 
