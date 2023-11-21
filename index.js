@@ -261,7 +261,7 @@ app.post('/jwt', async(req,res) =>{
 
 
 // stats and anlytics
-app.get('/admin-stats', async(req,res)=>{
+app.get('/admin-stats', verifyToken,verifyAdmin, async(req,res)=>{
   const users = await usersCollection.estimatedDocumentCount();
   const menuItems = await menuCollection.estimatedDocumentCount();
   const orders = await paymentCollection.estimatedDocumentCount()
@@ -272,9 +272,16 @@ app.get('/admin-stats', async(req,res)=>{
 
   const result = await paymentCollection.aggregate([
     {
-      
+      $group:{
+        _id: null,
+        totalRevenue: {
+          $sum: '$price'
+        }
+      }
     }
-  ])
+  ]).toArray()
+
+  const revenue = result.length > 0 ? result[0].totalRevenue : 0;
   res.send({
     users,
     menuItems,
@@ -283,7 +290,34 @@ app.get('/admin-stats', async(req,res)=>{
   })
 })
 
+// using aggregate pipeline
+app.get('/order-stats', async(req,res) =>{
+  const result = await paymentCollection.aggregate([
+    {
+      $unwind: '$menuItemsIds'
+    },
+    {
+      $lookup: {
+        from: 'menu',
+        localField: 'menuItemIds',
+        foreignField: '_id',
+        as: 'menuItems'
+      }
+    },
+    {
+      $unwind: '$menuItems'
+    },
+    {
+      $group: {
+        _id: '$menuItems.category',
+      quantity: { $sum: 1},
+      revenue: {$sum: '$menuItems.price'}
 
+      }
+    }
+  ]).toArray()
+  res.send(result)
+})
 
 
 
